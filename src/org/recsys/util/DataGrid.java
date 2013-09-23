@@ -36,4 +36,25 @@ public class DataGrid {
 		}
 		return (String) secondaryTable.get(key2);
 	}
+	
+	public String removeEntry(String key1, String key2) {
+		
+		HashMap secondaryTable = (HashMap) primaryTable.get(key1);
+		
+		if(secondaryTable == null) {
+			return null;
+		} else {
+			return (String) secondaryTable.remove(key2);
+		}		
+	}
+	
+	public String removeEntry(String key1) {
+		return (String) primaryTable.remove(key1);
+	}
+	
+	public void clear() {
+		primaryTable.clear();
+	}
+	
+	
 }
