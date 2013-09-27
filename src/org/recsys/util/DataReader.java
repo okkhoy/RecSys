@@ -12,16 +12,25 @@ import au.com.bytecode.opencsv.CSVReader;
 
 public class DataReader {
 	
-	private DataGrid ratingGrid = new DataGrid();
-		
-	public void readData(String dataFile) throws IOException {
+	private DataGrid ratingGrid; 
+	
+	public DataReader() {
+		ratingGrid = new DataGrid();
+	}
+	
+	public DataGrid readData(String dataFile) throws IOException {
 		
 		CSVReader csvReader = new CSVReader(new FileReader(dataFile));
 		String [] nextLine;
 		
 		// stores userId, movieId, rating data in the DataGrid
 		while( (nextLine = csvReader.readNext()) != null) {
-			ratingGrid.putData(nextLine[0], nextLine[1], nextLine[2]);
+			ratingGrid.putData(Integer.parseInt(nextLine[0]), Integer.parseInt(nextLine[1]), Double.parseDouble(nextLine[2]));
 		}
+		return ratingGrid;
+	}
+	
+	public DataGrid getRatingGrid() {
+		return this.ratingGrid;
 	}
 }

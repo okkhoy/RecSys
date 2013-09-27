@@ -1,28 +1,92 @@
 package org.recsys.assignments.assignment1;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+
+import org.recsys.util.ArrayListComparator;
+import org.recsys.util.DataGrid;
+import org.recsys.util.DataReader;
 
 public class NonPersRecommender {
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		// Movies array contains the movie IDs of the top 5 movies.
 		int movies[] = new int[5];
-		
 
+		String inputFile = "data/recsys_data_ratings.csv";
+		DataReader reader = new DataReader();
+		reader.readData(inputFile);
+
+		DataGrid inputGrid = reader.getRatingGrid(); 
+
+		//inputGrid.printGrid();
+
+		DataGrid pivotGrid = inputGrid.transposeKeys();
+
+		//pivotGrid.printGrid();
+		int movies1[] = new int[5];
+		
+		movies1 = calculate1(inputGrid, pivotGrid, 36955);
+		System.out.println(" ");
+		calculate1(inputGrid, pivotGrid, 180);
 
 		// Write the top 5 movies, one per line, to a text file.
 		try {
-		    PrintWriter writer = new PrintWriter("pa1-result.txt","UTF-8");
-	       
-		    for (int movieId : movies) {
-			writer.println(movieId);
-		    }
+			PrintWriter writer = new PrintWriter("pa1-result.txt","UTF-8");
 
-		    writer.close();
-		    
+			for (int movieId : movies) {
+				writer.println(movieId);
+			}
+
+			writer.close();
+
 		} catch (Exception e) {
-		    System.out.println(e.getMessage());
+			System.out.println(e.getMessage());
 		}
-    }
+	}
+	
+	@SuppressWarnings("unchecked")
+	public static int[] calculate1(DataGrid inputGrid, DataGrid pivotGrid, int movieId) {
+		
+		// get all movie list
+		Iterator movies = pivotGrid.primaryKeys();
+		
+		// users who watched movieId (say 11)
+		Set usersWhoWatchedMovieId = pivotGrid.getSecondaryKeys(movieId);
+		int nWatchedMovieId = usersWhoWatchedMovieId.size(); // how many watched movieId
+		ArrayList movieRatio = new ArrayList();
+		
+		while(movies.hasNext()) {
+			int otherMovie = (Integer)movies.next();
+			if(otherMovie == movieId) {
+				continue;
+			}
+			Set manip = new HashSet(usersWhoWatchedMovieId);
+			Set usersWhoWatchedOther = pivotGrid.getSecondaryKeys(otherMovie);
+			manip.retainAll(usersWhoWatchedOther);
+			HashMap otherMovieRatio = new HashMap();
+			otherMovieRatio.put(otherMovie, (manip.size()/(nWatchedMovieId * 1.0)));
+			movieRatio.add(otherMovieRatio);
+			
+			//System.out.println("Movie : " + otherMovie + " Was watched by: " + manip.size() +
+			//		" Ratio : " + manip.size()/(nWatchedMovieId * 1.0));
+		}
+		
+		Collections.sort(movieRatio, new ArrayListComparator());
+		System.out.print(movieRatio.get(0).toString());
+		System.out.print(movieRatio.get(1).toString());
+		System.out.print(movieRatio.get(2).toString());
+		System.out.print(movieRatio.get(3).toString());
+		System.out.print(movieRatio.get(4).toString());
+		
+		return null;
+		
+	}
 
 }
 
@@ -36,7 +100,7 @@ public class NonPersRecommender {
    12
    36955
    180
-  
+
 Overview
 
 This assignment will explore non-personalized recommendations. You
@@ -115,4 +179,4 @@ submission for the first part (simple formula) would be:
 Note that with rounding, some entries will appear to tie. Be sure to
 preserve the order of the output from the original algorithm.
 
-*/
+ */
