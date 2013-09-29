@@ -72,6 +72,10 @@ public class DataGrid {
 		return this.primaryTable.keySet().iterator();
 	}
 	
+	public Set getPrimaryKeys() {
+		return this.primaryTable.keySet();
+	}
+	
 	public Iterator secondaryKeys(int key1) {
 		HashMap secondaryTable = (HashMap) primaryTable.get(key1);
 		

@@ -7,36 +7,168 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.recsys.util.ArrayListComparator;
 import org.recsys.util.DataGrid;
 import org.recsys.util.DataReader;
+import org.recsys.util.SetOps;
 
 public class NonPersRecommender {
 	public static void main(String[] args) throws IOException {
-		// Movies array contains the movie IDs of the top 5 movies.
-		int movies[] = new int[5];
+		// Movies array contains the movie IDs given as input to me.
+		int movies[] = new int[3];
+
+		movies[0] = 12;
+		movies[1] = 36955;
+		movies[2] = 180;
+		
+		//movies[0] = 11;
+		//movies[1] = 121;
+		//movies[2] = 8587;
+
+		int topNToList = 5;
 
 		String inputFile = "data/recsys_data_ratings.csv";
 		DataReader reader = new DataReader();
 		reader.readData(inputFile);
 
+		/*
+		 * get two hash maps < userId : < movieId : ratings > >
+		 * this is recorded in inputGrid.
+		 * 
+		 * next pivot the keys, so that we get: < movieId : < userId : ratings > >
+		 * this is recorded in pivotGrid.
+		 */
 		DataGrid inputGrid = reader.getRatingGrid(); 
-
-		//inputGrid.printGrid();
-
 		DataGrid pivotGrid = inputGrid.transposeKeys();
 
-		//pivotGrid.printGrid();
-		int movies1[] = new int[5];
+		/*
+		 * iterate through the input and print results.
+		 */
+		//for(int i = 0; i < 3; i++) {
+		//	calculate1(inputGrid, pivotGrid, movies[i], topNToList);
+		//}		
 		
-		movies1 = calculate1(inputGrid, pivotGrid, 36955);
 		System.out.println(" ");
-		calculate1(inputGrid, pivotGrid, 180);
+		
+		for(int i = 0; i < 3; i++) {
+			calculate2(inputGrid, pivotGrid, movies[i], topNToList);
+		}
+	}
 
-		// Write the top 5 movies, one per line, to a text file.
-		try {
+	@SuppressWarnings("unchecked")
+	public static void calculate1(DataGrid inputGrid, DataGrid pivotGrid, int movieId, int topNToList) {
+
+		// get all movie list
+		Iterator movies = pivotGrid.primaryKeys();
+
+		// users who watched movieId (say 11)
+		Set usersWhoWatchedMovieId = pivotGrid.getSecondaryKeys(movieId);
+		int nWatchedMovieId = usersWhoWatchedMovieId.size(); // how many watched movieId
+		ArrayList <HashMap <Integer, Double>> movieRatio = new ArrayList<HashMap <Integer, Double>> ();
+
+		while(movies.hasNext()) {
+			int otherMovie = (Integer)movies.next();
+			if(otherMovie == movieId) {
+				continue;
+			}
+			Set manip = new HashSet(usersWhoWatchedMovieId);
+			Set usersWhoWatchedOther = pivotGrid.getSecondaryKeys(otherMovie);
+			manip.retainAll(usersWhoWatchedOther);
+			HashMap<Integer, Double> otherMovieRatio = new HashMap<Integer, Double>();
+			otherMovieRatio.put(otherMovie, (manip.size()/(nWatchedMovieId * 1.0)));
+			movieRatio.add(otherMovieRatio);
+		}
+
+		Collections.sort(movieRatio, new ArrayListComparator());
+		System.out.print(movieId);
+		int i = 0;
+		for(HashMap<Integer, Double> map: movieRatio) {
+
+			for(Entry<Integer, Double> mapEntry: map.entrySet()) {
+				System.out.print("," + mapEntry.getKey() + "," + Math.round(mapEntry.getValue() * 100) / 100.00);
+			}
+			i++;
+			if(i >=5) {
+				System.out.println(" ");
+				break;
+			}
+		}
+		return;
+	}
+
+
+	@SuppressWarnings("unchecked")
+	public static void calculate2(DataGrid inputGrid, DataGrid pivotGrid, int movieId, int topNToList) {
+
+		// get an iterator over all movie list
+		Iterator movies = pivotGrid.primaryKeys();
+		// get all movies in the grid (universal set of movies here) 
+		Set allMovies = pivotGrid.getPrimaryKeys();
+		
+		// users who watched movieId (say 11)
+		Set usersWhoWatchedMovieId = pivotGrid.getSecondaryKeys(movieId);
+		int nWatchedMovieId = usersWhoWatchedMovieId.size(); // how many watched movieId
+		
+		ArrayList <HashMap <Integer, Double>> movieRatio = new ArrayList<HashMap <Integer, Double>> ();
+
+		while(movies.hasNext()) {
+			int otherMovie = (Integer)movies.next();
+			if(otherMovie == movieId) {
+				continue;
+			}
+			Set usersWhoWatchedOther = pivotGrid.getSecondaryKeys(otherMovie);
+			Set watchedXandY = SetOps.intersection(usersWhoWatchedMovieId, usersWhoWatchedOther);
+			
+			
+			/*
+			 * Numerator = X and Y / X
+			 */
+			double numerator = watchedXandY.size()/(nWatchedMovieId * 1.0);
+			
+			/*
+			 * Denominator = !X and Y / !X 
+			 */
+			
+			Set watchedYandNotX = SetOps.difference(usersWhoWatchedOther, usersWhoWatchedMovieId);
+			
+			double denominator = watchedYandNotX.size() / ((inputGrid.getPrimaryKeys().size()-nWatchedMovieId)*1.0);
+			
+			/*
+			System.out.print(otherMovie + "  :  " + watchedXandY.size() + "/" + nWatchedMovieId + "//");
+			System.out.print(watchedNotX.size() + "/" + watchedYandNotX.size());
+			System.out.print("   : " + numerator + "/");
+			System.out.println(denominator + " = " + (numerator/denominator));
+			*/
+			HashMap<Integer, Double> otherMovieRatio = new HashMap<Integer, Double>();
+			otherMovieRatio.put(otherMovie, (numerator/denominator));
+			movieRatio.add(otherMovieRatio);
+			
+			
+		}
+
+		Collections.sort(movieRatio, new ArrayListComparator());
+		System.out.print(movieId);
+		int i = 0;
+		for(HashMap<Integer, Double> map: movieRatio) {
+
+			for(Entry<Integer, Double> mapEntry: map.entrySet()) {
+				System.out.print("," + mapEntry.getKey() + "," + Math.round(mapEntry.getValue() * 100) / 100.00);
+			}
+			i++;
+			if(i >=5) {
+				System.out.println(" ");
+				break;
+			}
+		}
+		return;
+	}
+}
+
+/*
+ * try {
 			PrintWriter writer = new PrintWriter("pa1-result.txt","UTF-8");
 
 			for (int movieId : movies) {
@@ -48,50 +180,7 @@ public class NonPersRecommender {
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
-	}
-	
-	@SuppressWarnings("unchecked")
-	public static int[] calculate1(DataGrid inputGrid, DataGrid pivotGrid, int movieId) {
-		
-		// get all movie list
-		Iterator movies = pivotGrid.primaryKeys();
-		
-		// users who watched movieId (say 11)
-		Set usersWhoWatchedMovieId = pivotGrid.getSecondaryKeys(movieId);
-		int nWatchedMovieId = usersWhoWatchedMovieId.size(); // how many watched movieId
-		ArrayList movieRatio = new ArrayList();
-		
-		while(movies.hasNext()) {
-			int otherMovie = (Integer)movies.next();
-			if(otherMovie == movieId) {
-				continue;
-			}
-			Set manip = new HashSet(usersWhoWatchedMovieId);
-			Set usersWhoWatchedOther = pivotGrid.getSecondaryKeys(otherMovie);
-			manip.retainAll(usersWhoWatchedOther);
-			HashMap otherMovieRatio = new HashMap();
-			otherMovieRatio.put(otherMovie, (manip.size()/(nWatchedMovieId * 1.0)));
-			movieRatio.add(otherMovieRatio);
-			
-			//System.out.println("Movie : " + otherMovie + " Was watched by: " + manip.size() +
-			//		" Ratio : " + manip.size()/(nWatchedMovieId * 1.0));
-		}
-		
-		Collections.sort(movieRatio, new ArrayListComparator());
-		System.out.print(movieRatio.get(0).toString());
-		System.out.print(movieRatio.get(1).toString());
-		System.out.print(movieRatio.get(2).toString());
-		System.out.print(movieRatio.get(3).toString());
-		System.out.print(movieRatio.get(4).toString());
-		
-		return null;
-		
-	}
-
-}
-
-
-
+ */
 
 
 
