@@ -16,7 +16,19 @@ import org.recsys.util.DataReader;
 import org.recsys.util.SetOps;
 
 public class NonPersRecommender {
+	
+	// output files:
+	static PrintWriter writer1;
+	static PrintWriter writer2; 
+			
+	public NonPersRecommender() throws FileNotFoundException, UnsupportedEncodingException {
+		writer1 = new PrintWriter("pa1-result1.txt","UTF-8");
+		writer2 = new PrintWriter("pa1-result2.txt","UTF-8");
+	}
+	
 	public static void main(String[] args) throws IOException {
+		NonPersRecommender npr = new NonPersRecommender();
+		
 		// Movies array contains the movie IDs given as input to me.
 		int movies[] = new int[3];
 
@@ -30,6 +42,7 @@ public class NonPersRecommender {
 
 		int topNToList = 5;
 
+		// input file and ops
 		String inputFile = "data/recsys_data_ratings.csv";
 		DataReader reader = new DataReader();
 		reader.readData(inputFile);
@@ -47,19 +60,21 @@ public class NonPersRecommender {
 		/*
 		 * iterate through the input and print results.
 		 */
-		//for(int i = 0; i < 3; i++) {
-		//	calculate1(inputGrid, pivotGrid, movies[i], topNToList);
-		//}		
+		for(int i = 0; i < 3; i++) {
+			calculate1(inputGrid, pivotGrid, movies[i], topNToList);
+			writer1.close();
+		}		
 		
 		System.out.println(" ");
 		
 		for(int i = 0; i < 3; i++) {
 			calculate2(inputGrid, pivotGrid, movies[i], topNToList);
+			writer2.close();
 		}
 	}
 
 	@SuppressWarnings("unchecked")
-	public static void calculate1(DataGrid inputGrid, DataGrid pivotGrid, int movieId, int topNToList) {
+	public static void calculate1(DataGrid inputGrid, DataGrid pivotGrid, int movieId, int topNToList) throws FileNotFoundException, UnsupportedEncodingException {
 
 		// get all movie list
 		Iterator movies = pivotGrid.primaryKeys();
@@ -82,17 +97,23 @@ public class NonPersRecommender {
 			movieRatio.add(otherMovieRatio);
 		}
 
+		
+		
 		Collections.sort(movieRatio, new ArrayListComparator());
+		
+		writer1.print(movieId);
 		System.out.print(movieId);
 		int i = 0;
 		for(HashMap<Integer, Double> map: movieRatio) {
 
 			for(Entry<Integer, Double> mapEntry: map.entrySet()) {
 				System.out.print("," + mapEntry.getKey() + "," + Math.round(mapEntry.getValue() * 100) / 100.00);
+				writer1.print("," + mapEntry.getKey() + "," + Math.round(mapEntry.getValue() * 100) / 100.00);
 			}
 			i++;
 			if(i >=5) {
 				System.out.println(" ");
+				writer1.println(" ");
 				break;
 			}
 		}
@@ -101,7 +122,7 @@ public class NonPersRecommender {
 
 
 	@SuppressWarnings("unchecked")
-	public static void calculate2(DataGrid inputGrid, DataGrid pivotGrid, int movieId, int topNToList) {
+	public static void calculate2(DataGrid inputGrid, DataGrid pivotGrid, int movieId, int topNToList) throws FileNotFoundException, UnsupportedEncodingException {
 
 		// get an iterator over all movie list
 		Iterator movies = pivotGrid.primaryKeys();
@@ -137,28 +158,26 @@ public class NonPersRecommender {
 			
 			double denominator = watchedYandNotX.size() / (usersNotWatchedX.size()*1.0);
 			
-			/*
-			System.out.print(otherMovie + "  :  " + watchedXandY.size() + "/" + nWatchedMovieId + "//");
-			System.out.print(watchedNotX.size() + "/" + watchedYandNotX.size());
-			System.out.print("   : " + numerator + "/");
-			System.out.println(denominator + " = " + (numerator/denominator));
-			*/
 			HashMap<Integer, Double> otherMovieRatio = new HashMap<Integer, Double>();
 			otherMovieRatio.put(otherMovie, (numerator/denominator));
 			movieRatio.add(otherMovieRatio);
 		}
-
+		
 		Collections.sort(movieRatio, new ArrayListComparator());
+		
+		writer2.print(movieId);
 		System.out.print(movieId);
 		int i = 0;
 		for(HashMap<Integer, Double> map: movieRatio) {
 
 			for(Entry<Integer, Double> mapEntry: map.entrySet()) {
 				System.out.print("," + mapEntry.getKey() + "," + Math.round(mapEntry.getValue() * 100) / 100.00);
+				writer2.print("," + mapEntry.getKey() + "," + Math.round(mapEntry.getValue() * 100) / 100.00);
 			}
 			i++;
 			if(i >=5) {
 				System.out.println(" ");
+				writer2.println(" ");
 				break;
 			}
 		}
