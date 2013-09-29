@@ -133,8 +133,9 @@ public class NonPersRecommender {
 			 */
 			
 			Set watchedYandNotX = SetOps.difference(usersWhoWatchedOther, usersWhoWatchedMovieId);
+			Set usersNotWatchedX = SetOps.complement(usersWhoWatchedMovieId, inputGrid.getPrimaryKeys());
 			
-			double denominator = watchedYandNotX.size() / ((inputGrid.getPrimaryKeys().size()-nWatchedMovieId)*1.0);
+			double denominator = watchedYandNotX.size() / (usersNotWatchedX.size()*1.0);
 			
 			/*
 			System.out.print(otherMovie + "  :  " + watchedXandY.size() + "/" + nWatchedMovieId + "//");
@@ -145,8 +146,6 @@ public class NonPersRecommender {
 			HashMap<Integer, Double> otherMovieRatio = new HashMap<Integer, Double>();
 			otherMovieRatio.put(otherMovie, (numerator/denominator));
 			movieRatio.add(otherMovieRatio);
-			
-			
 		}
 
 		Collections.sort(movieRatio, new ArrayListComparator());
