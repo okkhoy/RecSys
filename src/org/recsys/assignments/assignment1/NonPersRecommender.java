@@ -22,8 +22,8 @@ public class NonPersRecommender {
 	static PrintWriter writer2; 
 			
 	public NonPersRecommender() throws FileNotFoundException, UnsupportedEncodingException {
-		writer1 = new PrintWriter("pa1-result1.txt","UTF-8");
-		writer2 = new PrintWriter("pa1-result2.txt","UTF-8");
+		writer1 = new PrintWriter("data/pa1-result1.txt","UTF-8");
+		writer2 = new PrintWriter("data/pa1-result2.txt","UTF-8");
 	}
 	
 	public static void main(String[] args) throws IOException {
@@ -62,15 +62,16 @@ public class NonPersRecommender {
 		 */
 		for(int i = 0; i < 3; i++) {
 			calculate1(inputGrid, pivotGrid, movies[i], topNToList);
-			writer1.close();
 		}		
 		
 		System.out.println(" ");
 		
 		for(int i = 0; i < 3; i++) {
 			calculate2(inputGrid, pivotGrid, movies[i], topNToList);
-			writer2.close();
 		}
+		
+		writer1.close();
+		writer2.close();
 	}
 
 	@SuppressWarnings("unchecked")
