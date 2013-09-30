@@ -186,28 +186,10 @@ public class NonPersRecommender {
 	}
 }
 
-/*
- * try {
-			PrintWriter writer = new PrintWriter("pa1-result.txt","UTF-8");
-
-			for (int movieId : movies) {
-				writer.println(movieId);
-			}
-
-			writer.close();
-
-		} catch (Exception e) {
-			System.out.println(e.getMessage());
-		}
- */
-
-
-
-
-/*
-   12
-   36955
-   180
+/*   
+ * INSTRUCTIONS: (From Coursera)
+ * INPUT: 12, 36955, 180
+ * 
 
 Overview
 
